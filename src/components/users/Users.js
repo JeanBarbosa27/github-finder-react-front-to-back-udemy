@@ -9,6 +9,10 @@ const Users = ({ loading, users  }) => {
     return <Spinner />
   }
 
+  if(!users.length) {
+    return <p className="text-center"><strong>No users found!</strong></p>
+  }
+
   return (
     <ul className="list" style={usersStyle}>
       {users.map(user => (
