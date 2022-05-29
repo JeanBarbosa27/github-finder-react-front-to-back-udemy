@@ -3,9 +3,10 @@ import axios from 'axios';
 
 import './App.css';
 
+import Alert from './components/layout/Alert';
 import Navbar from './components/layout/Navbar';
-import Users from './components/users/Users';
 import Search from './components/users/Search';
+import Users from './components/users/Users';
 
 class App extends Component {
   constructor() {
@@ -20,28 +21,43 @@ class App extends Component {
   }
 
   state = {
-    error: false,
-    errorMessage: '',
+    alert: null,
+    emptyListMessage: '',
     loading: false,
     users: [],
   }
 
-  searchUsers = async (userLogin) => {
+  searchUsers = async (searchText) => {
     try {
       this.setState({ loading: true });
       const res = await this.axiosInstance.get(
-        `search/users?q=${userLogin}&${this.authQuery}`
+        `search/users?q=${searchText}&${this.authQuery}`
       );
-      this.setState({ loading: false, users: res.data.items });
+
+      this.setState({
+        loading: false,
+        users: res.data.items,
+        emptyListMessage: res.data.items.length ? '' : `No users found for: ${searchText}!`,
+      });
     } catch(error) {
       this.setState({
         users: [],
         loading: false,
-        error: true,
-        errorMessage: error.message
+        alert: {
+          message: error.message,
+          type: 'danger',
+        }
       });
     }
   }
+
+  clearUsers = () => this.setState({ emptyListMessage: '', users: [], loading: false });
+
+  setAlert = (message, type) => {
+    this.setState({ alert: { message, type } });
+
+    setTimeout(() => this.setState({ alert: null }), 5000);
+  };
 
   async componentDidMount() {
     this.setState({loading: true});
@@ -50,15 +66,24 @@ class App extends Component {
   }
 
   render () {
-    const { error, errorMessage, loading, users } = this.state;
+    const { alert, loading, users, emptyListMessage } = this.state;
 
     return (
       <div className="App">
         <Navbar />
         <div className="container">
-          <Search searchUsers={this.searchUsers} />
-          {error && <p className="text-danger text-center">{errorMessage}</p>}
-          <Users loading={loading} users={users} />
+          <Alert alert={alert} />
+          <Search
+            searchUsers={this.searchUsers}
+            clearUsers={this.clearUsers}
+            showClearButton={!!this.state.users.length}
+            setAlert={this.setAlert}
+          />
+          <Users
+            loading={loading}
+            users={users}
+            emptyListMessage={emptyListMessage}
+          />
         </div>
       </div>
     );
