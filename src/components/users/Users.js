@@ -4,13 +4,17 @@ import PropTypes from 'prop-types';
 import Spinner from '../layout/Spinner';
 import UserItem from './UserItem';
 
-const Users = ({ loading, users  }) => {
+const Users = ({ loading, users, emptyListMessage  }) => {
   if(loading) {
     return <Spinner />
   }
 
-  if(!users.length) {
-    return <p className="text-center"><strong>No users found!</strong></p>
+  if(!users.length && emptyListMessage) {
+    return (
+      <p className="text-center text-danger my-3">
+        <strong>{emptyListMessage}</strong>
+      </p>
+    )
   }
 
   return (
@@ -29,6 +33,7 @@ const Users = ({ loading, users  }) => {
 Users.propTypes = {
   loading: PropTypes.bool.isRequired,
   users: PropTypes.array.isRequired,
+  emptyListMessage: PropTypes.string.isRequired,
 }
 
 const usersStyle = {
