@@ -1,7 +1,7 @@
 {
   "name": "github-finder",
   "description": "This project was created to following the first project of React Front to Back 2019 Udemy course teached by Brad Traversy.",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "author": "Jean Barbosa",
   "private": true,
   "dependencies": {
