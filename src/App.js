@@ -29,6 +29,7 @@ class App extends Component {
     loading: false,
     user: {},
     users: [],
+    repos: [],
   }
 
   searchUsers = async (searchText) => {
@@ -74,6 +75,20 @@ class App extends Component {
     }
   }
 
+  getUserRepos = async (userLogin) => {
+    try {
+      this.setState({ loading: true });
+      const res = await this.axiosInstance.get(
+        `users/${userLogin}/repos?per_page=5&sort=created:asc&${this.authQuery}`
+      );
+
+      this.setState({ loading: false, repos: res.data });
+    } catch(error) {
+      this.setState({ loading: false });
+      this.setAlert(error.message, 'danger');
+    }
+  }
+
   clearUsers = () => this.setState({ emptyListMessage: '', users: [], loading: false });
 
   setAlert = (message, type) => {
@@ -89,7 +104,14 @@ class App extends Component {
   }
 
   render () {
-    const { alert, loading, users, user, emptyListMessage } = this.state;
+    const {
+      alert,
+      loading,
+      users,
+      user,
+      repos,
+      emptyListMessage
+    } = this.state;
 
     return (
       <Router>
@@ -120,8 +142,10 @@ class App extends Component {
                 element={
                   <User
                     getUser={this.getUser}
+                    getUserRepos={this.getUserRepos}
                     userData={user}
                     loading={loading}
+                    repos={repos}
                   />
                 }
               />
