@@ -117,7 +117,13 @@ class App extends Component {
               <Route
                 exact
                 path="/user/:login"
-                element={<User getUser={this.getUser} userData={user} />}
+                element={
+                  <User
+                    getUser={this.getUser}
+                    userData={user}
+                    loading={loading}
+                  />
+                }
               />
             </Routes>
           </div>
