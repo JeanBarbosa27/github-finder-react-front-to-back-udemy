@@ -1,10 +1,17 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useEffect, useContext } from 'react';
 
+import GithubContext from '../../contexts/github/githubContext';
 import Spinner from '../layout/Spinner';
 import UserItem from './UserItem';
 
-const Users = ({ loading, users, emptyListMessage  }) => {
+const Users = () => {
+  const { users, getUsers, loading, emptyListMessage } = useContext(GithubContext);
+
+  useEffect(() => {
+    const fetchUsers = async() => await getUsers();
+    fetchUsers();
+  }, []);
+
   if(loading) {
     return <Spinner />
   }
@@ -21,19 +28,11 @@ const Users = ({ loading, users, emptyListMessage  }) => {
     <ul className="list" style={usersStyle}>
       {users.map(user => (
         <li key={user.id}>
-          <UserItem
-            user={user}
-          />
+          <UserItem user={user} />
         </li>
       ))}
     </ul>
   )
-}
-
-Users.propTypes = {
-  loading: PropTypes.bool.isRequired,
-  users: PropTypes.array.isRequired,
-  emptyListMessage: PropTypes.string.isRequired,
 }
 
 const usersStyle = {
