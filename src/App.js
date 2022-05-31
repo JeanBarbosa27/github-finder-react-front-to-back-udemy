@@ -1,4 +1,4 @@
-import React, { Component, Fragment } from 'react';
+import React, { Fragment, useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import axios from 'axios';
 
@@ -11,150 +11,129 @@ import Search from './components/users/Search';
 import User from './pages/User';
 import Users from './components/users/Users';
 
-class App extends Component {
-  constructor() {
-    super()
-    this.axiosInstance = axios.create({
-      baseURL: 'https://api.github.com',
-      timeout: 10000,
-    });
-    this.clientId = process.env.REACT_APP_GITHUB_FINDER_CLIENT_ID;
-    this.clientSecret = process.env.REACT_APP_GITHUB_FINDER_CLIENT_SECRET
-    this.authQuery = `client_id=${this.clientId}&client_secret${this.client_secret}`;
-  }
+const App = () => {
+  const [alert, setAlert] = useState(null);
+  const [emptyListMessage, setEmptyListMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [user, setUser] = useState({});
+  const [users, setUsers] = useState([]);
+  const [repos, setRepos] = useState([]);
 
-  state = {
-    alert: null,
-    emptyListMessage: '',
-    loading: false,
-    user: {},
-    users: [],
-    repos: [],
-  }
+  const axiosInstance = axios.create({
+    baseURL: 'https://api.github.com',
+    timeout: 10000,
+  });
+  const clientId = process.env.REACT_APP_GITHUB_FINDER_CLIENT_ID;
+  const clientSecret = process.env.REACT_APP_GITHUB_FINDER_CLIENT_SECRET
+  const authQuery = `client_id=${clientId}&client_secret${clientSecret}`;
 
-  searchUsers = async (searchText) => {
+  useEffect(() => {
+    setLoading(true);
+    const fetchUsers = async () => {
+      const res = await axiosInstance.get(`users?client_id=${authQuery}`);
+      setLoading(false);
+      setUsers(res.data);
+    }
+    fetchUsers();
+  }, []);
+
+  const setAlertAsError = (message) => setAlert({ message, type: 'danger'});
+
+  const searchUsers = async (searchText) => {
     try {
-      this.setState({ loading: true });
-      const res = await this.axiosInstance.get(
-        `search/users?q=${searchText}&${this.authQuery}`
+      setLoading(true);
+      const res = await axiosInstance.get(`search/users?q=${searchText}&${authQuery}`);
+      setLoading(false);
+      setUsers(res.data.items);
+      setEmptyListMessage(res.data.items.length ? '' : `No users found for: ${searchText}!`);
+    } catch(error) {
+      setUsers([]);
+      setLoading(false);
+      setAlertAsError(error.message);
+    }
+  }
+
+  const getUser = async (userLogin) => {
+    try {
+      setLoading(false);
+      const res = await axiosInstance.get(`users/${userLogin}?${authQuery}`);
+      setLoading(false);
+      setUser(res.data);
+    } catch(error) {
+      setUser({});
+      setLoading(false);
+      setAlertAsError(error.message);
+    }
+  }
+
+  const getUserRepos = async (userLogin) => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get(
+        `users/${userLogin}/repos?per_page=5&sort=created:asc&${authQuery}`
       );
 
-      this.setState({
-        loading: false,
-        users: res.data.items,
-        emptyListMessage: res.data.items.length ? '' : `No users found for: ${searchText}!`,
-      });
+      setLoading(false);
+      setRepos(res.data);
     } catch(error) {
-      this.setState({
-        users: [],
-        loading: false,
-        alert: {
-          message: error.message,
-          type: 'danger',
-        }
-      });
+      setLoading(false);
+      setAlertAsError(error.message);
     }
   }
 
-  getUser = async (userLogin) => {
-    try {
-      this.setState({ loading: true });
-      const res = await this.axiosInstance.get(`users/${userLogin}?${this.authQuery}`);
-
-      this.setState({ loading: false, user: res.data });
-
-    } catch(error) {
-      this.setState({
-        user: {},
-        loading: false,
-        alert: {
-          message: error.message,
-          type: 'danger',
-        }
-      })
-    }
+  const clearUsers = () => {
+    setLoading(false);
+    setEmptyListMessage('');
+    setUsers([]);
   }
 
-  getUserRepos = async (userLogin) => {
-    try {
-      this.setState({ loading: true });
-      const res = await this.axiosInstance.get(
-        `users/${userLogin}/repos?per_page=5&sort=created:asc&${this.authQuery}`
-      );
+  const showAlert = (message, type) => {
+    setAlert({ message, type });
 
-      this.setState({ loading: false, repos: res.data });
-    } catch(error) {
-      this.setState({ loading: false });
-      this.setAlert(error.message, 'danger');
-    }
-  }
-
-  clearUsers = () => this.setState({ emptyListMessage: '', users: [], loading: false });
-
-  setAlert = (message, type) => {
-    this.setState({ alert: { message, type } });
-
-    setTimeout(() => this.setState({ alert: null }), 5000);
+    setTimeout(() => setAlert(null), 5000);
   };
 
-  async componentDidMount() {
-    this.setState({loading: true});
-    const res = await this.axiosInstance.get(`users?client_id=${this.authQuery}`);
-    this.setState({ loading: false, users: res.data });
-  }
-
-  render () {
-    const {
-      alert,
-      loading,
-      users,
-      user,
-      repos,
-      emptyListMessage
-    } = this.state;
-
-    return (
-      <Router>
-        <div className="App">
-          <Navbar />
-          <div className="container">
-            <Alert alert={alert} />
-            <Routes>
-              <Route exact path="/" element={(
-                <Fragment>
-                  <Search
-                    searchUsers={this.searchUsers}
-                    clearUsers={this.clearUsers}
-                    showClearButton={!!this.state.users.length}
-                    setAlert={this.setAlert}
-                    />
-                  <Users
-                    loading={loading}
-                    users={users}
-                    emptyListMessage={emptyListMessage}
+  return (
+    <Router>
+      <div className="App">
+        <Navbar />
+        <div className="container">
+          <Alert alert={alert} />
+          <Routes>
+            <Route exact path="/" element={(
+              <Fragment>
+                <Search
+                  searchUsers={searchUsers}
+                  clearUsers={clearUsers}
+                  showClearButton={!!users.length}
+                  setAlert={showAlert}
                   />
-                </Fragment>
-              )} />
-              <Route exact path="/about" element={<About />} />
-              <Route
-                exact
-                path="/user/:login"
-                element={
-                  <User
-                    getUser={this.getUser}
-                    getUserRepos={this.getUserRepos}
-                    userData={user}
-                    loading={loading}
-                    repos={repos}
-                  />
-                }
-              />
-            </Routes>
-          </div>
+                <Users
+                  loading={loading}
+                  users={users}
+                  emptyListMessage={emptyListMessage}
+                />
+              </Fragment>
+            )} />
+            <Route exact path="/about" element={<About />} />
+            <Route
+              exact
+              path="/user/:login"
+              element={
+                <User
+                  getUser={getUser}
+                  getUserRepos={getUserRepos}
+                  userData={user}
+                  loading={loading}
+                  repos={repos}
+                />
+              }
+            />
+          </Routes>
         </div>
-      </Router>
-    );
-  }
+      </div>
+    </Router>
+  );
 }
 
 export default App;
