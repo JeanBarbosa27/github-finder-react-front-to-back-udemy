@@ -12,6 +12,14 @@ import {
   SET_LOADING,
 } from '../types';
 
+let clientId = process.env.REACT_APP_GITHUB_FINDER_CLIENT_ID;
+let clientSecret = process.env.REACT_APP_GITHUB_FINDER_CLIENT_SECRET
+
+if (process.env.NODE_ENV === 'production') {
+  clientId = process.env.GITHUB_FINDER_CLIENT_ID;
+  clientSecret = process.env.GITHUB_FINDER_CLIENT_SECRET;
+}
+
 const GithubState = (props) => {
   const initialState = {
     alert: null,
@@ -29,8 +37,7 @@ const GithubState = (props) => {
     baseURL: 'https://api.github.com',
     timeout: 10000,
   });
-  const clientId = process.env.REACT_APP_GITHUB_FINDER_CLIENT_ID;
-  const clientSecret = process.env.REACT_APP_GITHUB_FINDER_CLIENT_SECRET
+
   const authQuery = `client_id=${clientId}&client_secret${clientSecret}`;
 
   const clearUsers = () => dispatch({ type: CLEAR_USERS });

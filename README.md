@@ -21,4 +21,8 @@ Github URL's used:
 - Run local server with `yarn start` command
 - Prepare application for deployment with `yarn build` command
 
+## Roadmap
+
+- [ ] Deploy it somewhere (Netlify, Heroku, etc).
+
 **Building document**
